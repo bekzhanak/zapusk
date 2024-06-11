@@ -21,8 +21,7 @@ async def receive_data(request: Request):
     for i in arr:
         data = i.split("=")
         if data[0] == "customer_phone":
-            phone = data[1]
-            print(urllib.parse.unquote(phone))
+            phone = urllib.parse.unquote(data[1])
         elif data[0] == "sum":
             sum = data[1]
         elif data[0] == "payment_status":
