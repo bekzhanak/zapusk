@@ -4,7 +4,11 @@ from fastapi import FastAPI, Request
 app = FastAPI()
 
 
-@app.post("/")
+@app.get("/hello/")
+async def hello(request: Request):
+    return {"message": "Hello world"}
+
+@app.post("/webhook/")
 async def receive_data(request: Request):
     # Get headers
     headers = dict(request.headers)
@@ -38,4 +42,4 @@ async def receive_data(request: Request):
 # Run the API (optional, for development purposes)
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("service:app", host="0.0.0.0", port=8000)
+    uvicorn.run("service:app", host="127.0.0.1", port=8000)
