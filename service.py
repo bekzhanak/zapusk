@@ -12,17 +12,14 @@ async def hello(request: Request):
 
 @app.post("/webhook/")
 async def receive_data(request: Request):
-    try:
-        body_dict = await request.json()
-    except Exception:
-        body_dict = await request.body()
+    body_dict = await request.json()
 
-    if not body_dict["payment_status"] == "success":
+    if not body_dict.get("payment_status") == "success":
         return
 
-    phone = body_dict["customer_phone"]
+    phone = body_dict.get("customer_phone")
 
-    payments[phone] = body_dict["sum"]
+    payments[phone] = body_dict.get("sum")
 
     save_json("payments.json", payments)
 
