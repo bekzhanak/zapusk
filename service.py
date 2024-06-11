@@ -19,6 +19,7 @@ async def receive_data(request: Request):
     for i in arr:
         data = i.split("=")
         if data[0] == "customer_phone":
+            print(phone.encode("utf-8"))
             phone = data[1]
         elif data[0] == "sum":
             sum = data[1]
