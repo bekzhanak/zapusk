@@ -12,7 +12,11 @@ async def hello(request: Request):
 
 @app.post("/webhook/")
 async def receive_data(request: Request):
-    body_dict = await request.json()
+    body_dict = await request.body()
+    body_dict.decode("utf-8")
+    print(type(body_dict))
+    print(body_dict)
+
 
     if not body_dict.get("payment_status") == "success":
         return
