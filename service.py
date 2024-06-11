@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request
 from utils import *
+import urllib.parse
+
 
 payments = load_json("payments.json")
 
@@ -20,7 +22,7 @@ async def receive_data(request: Request):
         data = i.split("=")
         if data[0] == "customer_phone":
             phone = data[1]
-            print(phone.encode("utf-8"))
+            print(urllib.parse.unquote(encoded_string.decode('utf-8')))
         elif data[0] == "sum":
             sum = data[1]
         elif data[0] == "payment_status":
