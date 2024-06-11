@@ -14,16 +14,24 @@ async def hello(request: Request):
 async def receive_data(request: Request):
     body_dict = await request.body()
     body_dict.decode("utf-8")
+    arr = body_dict.split("&")
+
+    for i in arr:
+        data = i.split("=")
+        if data[0] == "customer_phone":
+            phone = data[1]
+        elif data[0] == "sum":
+            sum = data[1]
+        elif data[0] == "payment_status":
+            status = data[1]
+
     print(type(body_dict))
     print(body_dict)
 
-
-    if not body_dict.get("payment_status") == "success":
+    if status == "success":
         return
 
-    phone = body_dict.get("customer_phone")
-
-    payments[phone] = body_dict.get("sum")
+    payments[phone] = sum
 
     save_json("payments.json", payments)
 
