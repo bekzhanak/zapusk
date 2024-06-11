@@ -13,7 +13,7 @@ async def hello(request: Request):
 @app.post("/webhook/")
 async def receive_data(request: Request):
     body_dict = await request.body()
-    body_dict.decode("utf-8")
+    body_dict = body_dict.decode("utf-8")
     arr = body_dict.split("&")
 
     for i in arr:
