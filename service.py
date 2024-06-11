@@ -28,7 +28,7 @@ async def receive_data(request: Request):
     print(type(body_dict))
     print(body_dict)
 
-    if status == "success":
+    if not status == "success":
         return
 
     payments[phone] = sum
