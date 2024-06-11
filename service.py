@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request
+from utils import *
 
+payments = load_json("payments.json")
 
 app = FastAPI()
 
@@ -10,32 +12,19 @@ async def hello(request: Request):
 
 @app.post("/webhook/")
 async def receive_data(request: Request):
-    # Get headers
-    headers = dict(request.headers)
-
-    # Access body as bytes (for raw data)
-    body_bytes = await request.body()
-
-    # Optionally, decode body as string (if applicable)
     try:
-        body_str = body_bytes.decode("utf-8")
-    except UnicodeDecodeError:
-        body_str = "Non-UTF-8 encoded body"
+        body_dict = await request.json()
+    except Exception:
+        body_dict = await request.body()
 
-    # Get other request information
-    method = request.method
-    base_url = request.base_url
-    client_ip = request.client.host
+    if not body_dict["payment_status"] == "success":
+        return
 
-    # Print information
-    print(f"--- New Request ---")
-    print(f"Method: {method}")
-    print(f"Base URL: {base_url}")
-    print(f"Headers: {headers}")
-    print(f"Body (bytes): {body_bytes}")
-    print(f"Body (string, if decodable): {body_str}")
-    print(f"Client IP: {client_ip}")
-    print("------------------")
+    phone = body_dict["customer_phone"]
+
+    payments[phone] = body_dict["sum"]
+
+    save_json("payments.json", payments)
 
     return {"message": "Data received!"}
 
