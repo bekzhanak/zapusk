@@ -5,7 +5,7 @@ import asyncio
 BOT_TOKEN = "6955797688:AAEL6QuK_E_M4n-sfxbgokzWr5JhlXZjIgI"
 
 # Replace with the channel ID (can be found from the channel info URL)
-CHANNEL_ID = -1002166911197  # Use a negative value for channel IDs
+CHANNEL_ID = -1002177617373  # Use a negative value for channel IDs
 
 # List of authorized user IDs (replace with actual IDs)
 AUTHORIZED_USER_IDS = [897190202]
@@ -31,18 +31,17 @@ async def handle_new_chat_members(message: types.Message):
     chat = message.chat
     new_members = message.new_chat_members
 
-    if chat.id == CHANNEL_ID:
+    print(new_members)
+    if chat.id == CHANNEL_ID and new_members:
         for member in new_members:
             await check_and_delete_user(chat.id, member.id)
 
 
 async def main():
     """Starts the Telegram bot."""
-
     # Run the bot asynchronously
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    bot.ban_chat_member(chat_id=CHANNEL_ID, user_id=1)
     asyncio.run(main())

@@ -204,7 +204,8 @@ async def proccess_prodamus(message: types.Message, state: FSMContext):
 @dp.message(Command(commands=["wheel"]))
 async def play_wheel_game(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
-    if current_state != "wheel_available":
+    print(str(current_state)[5:])
+    if str(current_state)[5:] != "wheel_available" or current_state == None:
         await message.reply("Please validate your receipt first.")
         return
 
@@ -216,7 +217,9 @@ async def play_wheel_game(message: types.Message, state: FSMContext):
 
     try:
         winning_item = str(play_game())
-        await message.reply_photo(photo="https://pbs.twimg.com/profile_images/1676625773611081728/k05BA1j1_400x400.jpg")
+        print(winning_item)
+        # await message.reply_video(video="https://drive.google.com/uc?export=download&id=1x9ZVXxE1VHJEhi_1eEy5-D8Nmw53x607")
+        # await message.reply_photo(photo="/Users/user/Desktop/dev/zapusk/IMG_9841.JPG")
         await message.reply(f"Поздравляем, {name}! Вы выиграли {winning_item}")
     except Exception as e:
         await message.reply("Произошла ошибка. Пожалуйста, попробуйте позже.")
