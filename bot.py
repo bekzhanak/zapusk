@@ -297,7 +297,7 @@ async def play_wheel_game(message: types.Message, state: FSMContext):
             await message.reply_document(
                 document="BQACAgIAAxkBAAJSR2ZpmtLBbXQ6emmjqtAzPbSZvuMhAAKDTAACsupRS6G0Q08377DfNQQ")
         elif winning_item == "Урок: как правильно сочетать цвета в образах?":
-            await message.reply("Урок: как правильно сочетать цвета в образах?")
+            await message.reply("https://youtu.be/DKdEPHjZw3E?si=aueHIfdxRWWhKOUv")
         elif winning_item == "150.000 тг и составление капсулы от меня на лето":
             await message.reply("150.000 тг и составление капсулы от меня на лето")
         elif winning_item == "Сумка Jacquemus":
