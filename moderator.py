@@ -3,7 +3,7 @@ import asyncio
 import csv
 
 # Replace with your actual Telegram bot token
-BOT_TOKEN = "6955797688:AAEL6QuK_E_M4n-sfxbgokzWr5JhlXZjIgI"
+BOT_TOKEN = "7463093661:AAFEMHj-1mQJUg14v7zdJLNvu9wNV-fVtHI"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -16,6 +16,7 @@ def get_auth_users():
             if row["status"] == "payment":
                 auth_users.append(row["telegram_id"])
     return auth_users
+
 
 @dp.chat_join_request()
 async def handle_new_chat_members(update: types.ChatJoinRequest):
