@@ -210,7 +210,7 @@ async def payment_method_handler(callback_query: types.CallbackQuery, state: FSM
         )
         await state.set_state(Form.kaspi)
         kb = [
-            [types.InlineKeyboardButton(text="Перейти на Каспи", url="https://pay.kaspi.kz/pay/5t1euuhq")]
+            [types.InlineKeyboardButton(text="Перейти на Каспи", url="https://pay.kaspi.kz/pay/a7gxduvm")]
         ]
         await callback_query.message.reply("Click", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
         await callback_query.message.answer("Загрузите квитанцию ​​об оплате Kaspi в формате PDF.")
