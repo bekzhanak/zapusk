@@ -41,7 +41,8 @@ async def cmd_start(message: types.Message, state: FSMContext):
         "telegram_id": str(telegram_id),
         "name": "",
         "phone": "",
-        "crm_id": ""  # Initialize crm_id with a default value
+        "crm_id": "",  # Initialize crm_id with a default value
+        "payment_time": 0
     }
 
     # Load existing users
@@ -59,6 +60,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
     await state.update_data(**user_data)
     await state.set_state(Form.name)
+
     await message.reply("Please enter your name and surname:")
 
 
@@ -78,6 +80,7 @@ async def process_name(message: types.Message, state: FSMContext):
 async def process_phone(message: types.Message, state: FSMContext):
     if message.contact:
         await state.update_data(phone=message.contact.phone_number)
+
     data = await state.get_data()
     current_state = await state.get_state()
 
@@ -167,7 +170,7 @@ async def process_receipt(message: types.Message, state: FSMContext):
     await process_paycheck(message, online_data, state)
 
 
-async def process_paycheck(message, paycheck_data, state):
+async def process_paycheck(message: types.Message, paycheck_data, state: FSMContext):
     paycheck_id = paycheck_data["check_number"]
     if paycheck_id in paychecks:
         await message.reply("Данный чек уже был отправлен")
@@ -185,7 +188,30 @@ async def process_paycheck(message, paycheck_data, state):
         await message.reply("Чек валидирован")
         await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
         await message.reply("колесо фортуны /wheel")
+
+        # Update state to wheel_available and add payment time
+        payment_time = int(time.time())
+        await state.update_data(payment_time=payment_time)
         await state.set_state(Form.wheel_available)
+
+        # Update CSV with payment time
+        existing_users = {}
+        try:
+            with open('user_data.csv', 'r') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    existing_users[row['telegram_id']] = row
+        except FileNotFoundError:
+            pass
+
+        existing_users[data["telegram_id"]].update({"payment_time": payment_time})
+
+        with open('user_data.csv', 'w', newline='') as csvfile:
+            fieldnames = ["start_time", "telegram_id", "name", "phone", "state", "crm_id", "payment_time"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for user in existing_users.values():
+                writer.writerow(user)
     else:
         await message.reply("CRM ID not found, cannot validate receipt.")
 
@@ -204,8 +230,7 @@ async def proccess_prodamus(message: types.Message, state: FSMContext):
 @dp.message(Command(commands=["wheel"]))
 async def play_wheel_game(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
-    print(str(current_state)[5:])
-    if str(current_state)[5:] != "wheel_available" or current_state == None:
+    if str(current_state)[5:] != "wheel_available" or current_state is None:
         await message.reply("Please validate your receipt first.")
         return
 
@@ -217,9 +242,17 @@ async def play_wheel_game(message: types.Message, state: FSMContext):
 
     try:
         winning_item = str(play_game())
-        print(winning_item)
-        # await message.reply_video(video="https://drive.google.com/uc?export=download&id=1x9ZVXxE1VHJEhi_1eEy5-D8Nmw53x607")
-        # await message.reply_photo(photo="/Users/user/Desktop/dev/zapusk/IMG_9841.JPG")
+        video = await message.reply_video(
+            video="BAACAgIAAxkBAAJRpGZpWda-g2rp3eeXzkhqYjw6ToD2AALiTQACsupJSzdhXgREkQ44NQQ")
+
+        async def delete_video_later():
+            await asyncio.sleep(8)
+            await bot.delete_message(chat_id=message.chat.id, message_id=video.message_id)
+
+        await asyncio.ensure_future(delete_video_later())
+
+        await message.reply_photo(
+            photo="AgACAgIAAxkBAAJRqWZpXAuMYMkvIuJMkOMBUrM_YxJzAALA5TEbsupJS8J4GRUJIevtAQADAgADeAADNQQ")
         await message.reply(f"Поздравляем, {name}! Вы выиграли {winning_item}")
     except Exception as e:
         await message.reply("Произошла ошибка. Пожалуйста, попробуйте позже.")
