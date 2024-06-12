@@ -41,8 +41,8 @@ async def cmd_start(message: types.Message, state: FSMContext):
         "telegram_id": str(telegram_id),
         "name": "",
         "phone": "",
-        "crm_id": "",  # Initialize crm_id with a default value
-        "payment_time": 0
+        "crm_id": "",
+        "payment_time": 0  # Initialize crm_id with a default value
     }
 
     # Load existing users
@@ -116,7 +116,7 @@ async def process_phone(message: types.Message, state: FSMContext):
 
     # Write updated data back to CSV
     with open('user_data.csv', 'w', newline='') as csvfile:
-        fieldnames = ["start_time", "telegram_id", "name", "phone", "state", "crm_id"]
+        fieldnames = ["start_time", "telegram_id", "name", "phone", "state", "crm_id", "payment_time"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for user in existing_users.values():
@@ -140,6 +140,7 @@ async def payment_method_handler(callback_query: types.CallbackQuery, state: FSM
         ]
         await callback_query.message.reply("Click", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
         await state.set_state(Form.prodamus)
+        await callback_query.message.reply("When finished click /check")
     elif callback_query.data == "pay_kaspi":
         # Prompt for PDF receipt instead of opening the URL directly
         await state.set_state(Form.kaspi)
@@ -210,6 +211,7 @@ async def process_paycheck(message: types.Message, paycheck_data, state: FSMCont
             pass
 
         existing_users[data["telegram_id"]].update({"payment_time": payment_time})
+        existing_users[data["telegram_id"]].update({"state": "payment"})
 
         with open('user_data.csv', 'w', newline='') as csvfile:
             fieldnames = ["start_time", "telegram_id", "name", "phone", "state", "crm_id", "payment_time"]
@@ -246,18 +248,17 @@ async def play_wheel_game(message: types.Message, state: FSMContext):
         return
 
     try:
-        winning_item = str(play_game())
-        video = await message.reply_video(
-            video="BAACAgIAAxkBAAJRpGZpWda-g2rp3eeXzkhqYjw6ToD2AALiTQACsupJSzdhXgREkQ44NQQ")
-
+        winning_item = str(play_game(prizes))
+        for prize in prizes:
+            if prize['name'] == winning_item:
+                photo_id = prize['photo_id']
+                video_id = prize['video_id']
+        video = await message.reply_video(video=video_id)
         async def delete_video_later():
-            await asyncio.sleep(8)
+            await asyncio.sleep(13)
             await bot.delete_message(chat_id=message.chat.id, message_id=video.message_id)
-
         await asyncio.ensure_future(delete_video_later())
-
-        await message.reply_photo(
-            photo="AgACAgIAAxkBAAJRqWZpXAuMYMkvIuJMkOMBUrM_YxJzAALA5TEbsupJS8J4GRUJIevtAQADAgADeAADNQQ")
+        await message.reply_photo(photo=photo_id)
         await message.reply(f"Поздравляем, {name}! Вы выиграли {winning_item}")
     except Exception as e:
         await message.reply("Произошла ошибка. Пожалуйста, попробуйте позже.")
