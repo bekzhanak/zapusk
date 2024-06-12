@@ -291,6 +291,17 @@ async def play_wheel_game(message: types.Message, state: FSMContext):
         await asyncio.ensure_future(delete_video_later())
         await message.reply_photo(photo=photo_id)
         await message.reply(f"Поздравляем, {name}! Вы выиграли {winning_item}")
+        if winning_item == "Урок по трендам и как их прогнозировать":
+            await message.reply("https://youtu.be/3CmIe4F6IqY?si=-9HfHWKbe1fi3X2h")
+        elif winning_item == "Гайд антитрендов на лето":
+            await message.reply_document(
+                document="BQACAgIAAxkBAAJSR2ZpmtLBbXQ6emmjqtAzPbSZvuMhAAKDTAACsupRS6G0Q08377DfNQQ")
+        elif winning_item == "Урок: как правильно сочетать цвета в образах?":
+            await message.reply("Урок: как правильно сочетать цвета в образах?")
+        elif winning_item == "150.000 тг и составление капсулы от меня на лето":
+            await message.reply("150.000 тг и составление капсулы от меня на лето")
+        elif winning_item == "Сумка Jacquemus":
+            await message.reply("Сумка Jacquemus")
     except Exception as e:
         await message.reply("Произошла ошибка. Пожалуйста, попробуйте позже.")
         print(f"Error during game: {e}")

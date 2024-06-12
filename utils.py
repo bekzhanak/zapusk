@@ -214,7 +214,7 @@ def extract_qr_code_from_pdf(pdf_path):
 
     for image in images:
         # Save image temporarily to disk
-        temp_image_path = "/Users/user/Desktop/dev/zapusk/Screenshot 2024-06-11 at 21.34.49.png"
+        temp_image_path = "check.png"
         image.save(temp_image_path)
 
         # Read the saved image
