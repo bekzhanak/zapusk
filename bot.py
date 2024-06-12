@@ -230,8 +230,39 @@ async def proccess_prodamus(message: types.Message, state: FSMContext):
         await message.reply("Proccess the payment")
         return
 
-    await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
-    await state.clear()
+    crm_id = data.get("crm_id")
+    if crm_id:
+        edit_crm(crm_id)
+        await message.reply("Оплата валидирована")
+        await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
+        await message.reply("колесо фортуны /wheel")
+
+        # Update state to wheel_available and add payment time
+        payment_time = int(time.time())
+        await state.update_data(payment_time=payment_time)
+        await state.set_state(Form.wheel_available)
+
+        # Update CSV with payment time
+        existing_users = {}
+        try:
+            with open('user_data.csv', 'r') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    existing_users[row['telegram_id']] = row
+        except FileNotFoundError:
+            pass
+
+        existing_users[data["telegram_id"]].update({"payment_time": payment_time})
+        existing_users[data["telegram_id"]].update({"state": "payment"})
+
+        with open('user_data.csv', 'w', newline='') as csvfile:
+            fieldnames = ["start_time", "telegram_id", "name", "phone", "state", "crm_id", "payment_time"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for user in existing_users.values():
+                writer.writerow(user)
+    else:
+        await message.reply("CRM ID not found, cannot validate receipt.")
 
 
 @dp.message(Command(commands=["wheel"]))
