@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import requests
 import PyPDF2
 from bs4 import BeautifulSoup
 from pdf2image import convert_from_path
@@ -11,11 +12,12 @@ from qreader import QReader
 
 import requests
 import time
-
-access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjlkNWY3NGJiY2JlYWNiNjE2YTUxZjAzYzc4YmQyODA0ZGRkOWRlYWQ5YWVlZTdkY2VlMDE4MTE2ZDhjZGUyMWNjNGQwNjlmNDIwZDU4YzBmIn0.eyJhdWQiOiI3MDdmYTJiOC03ZDE0LTRkNmEtYWM1Ni1jZWM1Y2VjNGUyMDAiLCJqdGkiOiI5ZDVmNzRiYmNiZWFjYjYxNmE1MWYwM2M3OGJkMjgwNGRkZDlkZWFkOWFlZWU3ZGNlZTAxODExNmQ4Y2RlMjFjYzRkMDY5ZjQyMGQ1OGMwZiIsImlhdCI6MTcxODEwMjE1MywibmJmIjoxNzE4MTAyMTUzLCJleHAiOjE3MTgxODg1NTMsInN1YiI6IjExMTQ1MzM0IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjMxNzk0NDAyLCJiYXNlX2RvbWFpbiI6ImFtb2NybS5ydSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJwdXNoX25vdGlmaWNhdGlvbnMiLCJmaWxlcyIsImNybSIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiZGU0NDc4NTktNDI1Ni00ZDdkLWExYzYtNzYwNWZhYjlkZGY5In0.VWKefnLRJQe0tQ9lerUKv0OVEoHLyepI-nM_tWoApSmUJX02nIIyN_7TDY7sl1U9O2eAQbfkldFBwdwTUoatv9UO3qo23J9bw9ZOKaghxWdQ_TW4xe7ioCtYlD5_EKCEy55qoHHSsqkW1KGmVMUwIVcDiNb3ZK18AWJbUGCj7TPpKBNILM5qNLDw1USEDDmPeLETGDtE_9Aiv4qf465ZF_w0nRRVKYwVqj5gwcgR0a1OzQL0BOIdfV9mXR4F03GC88lq36ByUtNzZzNmIjlVt0PId3hJkfAmBFwfTUO-7vwLTVxD0ppVefniISykiGSLX_I6wtMLJw60D3r0zdLXhw"
+# Replace with your new access token and subdomain
+access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjE2ZjIzMTA3ODQzOTE0NTJhMWRjNDZjMTlhZGNkNzQwZmU0M2Y0YmUwNjFiMDJiNjRiN2I4OGI2ZTk5NmFmNjVmYTdlODU5YzY5ZWQ5YTc4In0.eyJhdWQiOiJiOTcxMzBhZC05ZTcyLTRhN2UtYmUzMC1mOTM0N2U3YWUzMTQiLCJqdGkiOiIxNmYyMzEwNzg0MzkxNDUyYTFkYzQ2YzE5YWRjZDc0MGZlNDNmNGJlMDYxYjAyYjY0YjdiODhiNmU5OTZhZjY1ZmE3ZTg1OWM2OWVkOWE3OCIsImlhdCI6MTcxODE4ODg3MywibmJmIjoxNzE4MTg4ODczLCJleHAiOjE3MTgyNzUyNzMsInN1YiI6IjExMTM3MTk4IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjMxNzg5MDY2LCJiYXNlX2RvbWFpbiI6ImFtb2NybS5ydSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJwdXNoX25vdGlmaWNhdGlvbnMiLCJmaWxlcyIsImNybSIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiM2ViMGNlNWUtOTE2Yi00NWJkLWEyMzctYzZlODI3NGM3NGJhIn0.VSdtnTVk2LbsjXN4ROpe8AgtiEVOFSyNvZ_1C5lUscfWFRCTC2gVHXpYOuWdRwN_lvcgRxoTodzCEExgsMoNgeTyvbtG3GCkQnh8LV0y_sPSJO6ug1jNLzYw7MMoYfFwT5sEkJT6XM1hiooD1awXSkOzXKdJ6al00ZX0UQUHb5saQkT_XNYPbkJ_cMej1nkRJDjp_MTShfdqOGGcMdX53aYswD7-5ey2ef6slL8b6h8QAiy4zq6HRZivqVJjAbibhS3g8H68uFbJ6Icuct5xbZuzGDC5uJD-_EMkIoO3MtcsJDHYVgGn0G6FTjDtx7OPCASK6u2n5V0-ffvQ6CBs5Q"
 
 
 def add_crm(name, phone, date):
+
     # Set the headers for the request
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -24,48 +26,57 @@ def add_crm(name, phone, date):
 
     # Minimal lead creation data
     data = [{
-        "name": "Zapusk",
-        "_embedded": {
-            "contacts": [
+        "name": "telegram",
+        "pipeline_id":8270586,
+        "status_id": 67486762,
+        # 67486762
+        # 67486466
+        "_embedded":{
+            "contacts":[
                 {
-                    "first_name": name,
-                    "created_at": int(date),
-                    "updated_by": 0,
-                    "custom_fields_values": [
-                        {
-                            "field_code": "PHONE",
-                            "values": [
-                                {
-                                    "enum_code": "WORK",
-                                    "value": phone
-                                }
-                            ]
-                        }
-                    ]
+                "first_name":name,
+                "created_at":int(date),
+                "updated_by":0,
+                "custom_fields_values":[
+                    {
+                        "field_code": "PHONE",
+                        "values":[
+                            {
+                            "enum_code":"WORK",
+                            "value":phone
+                            }
+                        ]
+                    }
+                ],
                 }
             ],
+            "tags": [{
+                "name": "bot",
+            }],
         },
     }]
 
+
+
     # Make the POST request to create the lead
-    url = f'https://sanzharalibekovgmailcom8.amocrm.ru/api/v4/leads/complex'
+    url = f'https://enlikcourse.amocrm.ru/api/v4/leads/complex'
     response = requests.post(url, headers=headers, json=data)
 
     # Check the response
-    if response.status_code == 201:
+    if response.status_code == 200:
         print("Lead created successfully.")
         print("Response:", response.json())
     else:
         print("Failed to create lead.")
         print("Status code:", response.status_code)
         print("Response:", response.json())
-
+        
     return response.json()[0]["id"]
-
 
 def edit_crm(id):
     # Replace with your new access token and subdomain
-    access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjlkNWY3NGJiY2JlYWNiNjE2YTUxZjAzYzc4YmQyODA0ZGRkOWRlYWQ5YWVlZTdkY2VlMDE4MTE2ZDhjZGUyMWNjNGQwNjlmNDIwZDU4YzBmIn0.eyJhdWQiOiI3MDdmYTJiOC03ZDE0LTRkNmEtYWM1Ni1jZWM1Y2VjNGUyMDAiLCJqdGkiOiI5ZDVmNzRiYmNiZWFjYjYxNmE1MWYwM2M3OGJkMjgwNGRkZDlkZWFkOWFlZWU3ZGNlZTAxODExNmQ4Y2RlMjFjYzRkMDY5ZjQyMGQ1OGMwZiIsImlhdCI6MTcxODEwMjE1MywibmJmIjoxNzE4MTAyMTUzLCJleHAiOjE3MTgxODg1NTMsInN1YiI6IjExMTQ1MzM0IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjMxNzk0NDAyLCJiYXNlX2RvbWFpbiI6ImFtb2NybS5ydSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJwdXNoX25vdGlmaWNhdGlvbnMiLCJmaWxlcyIsImNybSIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiZGU0NDc4NTktNDI1Ni00ZDdkLWExYzYtNzYwNWZhYjlkZGY5In0.VWKefnLRJQe0tQ9lerUKv0OVEoHLyepI-nM_tWoApSmUJX02nIIyN_7TDY7sl1U9O2eAQbfkldFBwdwTUoatv9UO3qo23J9bw9ZOKaghxWdQ_TW4xe7ioCtYlD5_EKCEy55qoHHSsqkW1KGmVMUwIVcDiNb3ZK18AWJbUGCj7TPpKBNILM5qNLDw1USEDDmPeLETGDtE_9Aiv4qf465ZF_w0nRRVKYwVqj5gwcgR0a1OzQL0BOIdfV9mXR4F03GC88lq36ByUtNzZzNmIjlVt0PId3hJkfAmBFwfTUO-7vwLTVxD0ppVefniISykiGSLX_I6wtMLJw60D3r0zdLXhw"
+    access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjE2ZjIzMTA3ODQzOTE0NTJhMWRjNDZjMTlhZGNkNzQwZmU0M2Y0YmUwNjFiMDJiNjRiN2I4OGI2ZTk5NmFmNjVmYTdlODU5YzY5ZWQ5YTc4In0.eyJhdWQiOiJiOTcxMzBhZC05ZTcyLTRhN2UtYmUzMC1mOTM0N2U3YWUzMTQiLCJqdGkiOiIxNmYyMzEwNzg0MzkxNDUyYTFkYzQ2YzE5YWRjZDc0MGZlNDNmNGJlMDYxYjAyYjY0YjdiODhiNmU5OTZhZjY1ZmE3ZTg1OWM2OWVkOWE3OCIsImlhdCI6MTcxODE4ODg3MywibmJmIjoxNzE4MTg4ODczLCJleHAiOjE3MTgyNzUyNzMsInN1YiI6IjExMTM3MTk4IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjMxNzg5MDY2LCJiYXNlX2RvbWFpbiI6ImFtb2NybS5ydSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJwdXNoX25vdGlmaWNhdGlvbnMiLCJmaWxlcyIsImNybSIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiM2ViMGNlNWUtOTE2Yi00NWJkLWEyMzctYzZlODI3NGM3NGJhIn0.VSdtnTVk2LbsjXN4ROpe8AgtiEVOFSyNvZ_1C5lUscfWFRCTC2gVHXpYOuWdRwN_lvcgRxoTodzCEExgsMoNgeTyvbtG3GCkQnh8LV0y_sPSJO6ug1jNLzYw7MMoYfFwT5sEkJT6XM1hiooD1awXSkOzXKdJ6al00ZX0UQUHb5saQkT_XNYPbkJ_cMej1nkRJDjp_MTShfdqOGGcMdX53aYswD7-5ey2ef6slL8b6h8QAiy4zq6HRZivqVJjAbibhS3g8H68uFbJ6Icuct5xbZuzGDC5uJD-_EMkIoO3MtcsJDHYVgGn0G6FTjDtx7OPCASK6u2n5V0-ffvQ6CBs5Q"
+
 
     # Set the headers for the request
     headers = {
@@ -75,11 +86,11 @@ def edit_crm(id):
 
     # Lead update data
     data = {
-        "status_id": 67455558
+        "status_id": 67486466
     }
 
     # Make the PATCH request to update the lead
-    url = f'https://sanzharalibekovgmailcom8.amocrm.ru/api/v4/leads/{id}'
+    url = f'https://enlikcourse.amocrm.ru/api/v4/leads/{id}'
     response = requests.patch(url, headers=headers, json=data)
 
     # Check the response
@@ -203,7 +214,7 @@ def extract_qr_code_from_pdf(pdf_path):
 
     for image in images:
         # Save image temporarily to disk
-        temp_image_path = "check.png"
+        temp_image_path = "/Users/user/Desktop/dev/zapusk/Screenshot 2024-06-11 at 21.34.49.png"
         image.save(temp_image_path)
 
         # Read the saved image
@@ -217,7 +228,7 @@ def extract_qr_code_from_pdf(pdf_path):
 
         # Use the detect_and_decode function to get the decoded QR data
         decoded_texts = qreader.detect_and_decode(image=image)
-
+        
         os.remove(temp_image_path)
         # Print the results
         for text in decoded_texts:
