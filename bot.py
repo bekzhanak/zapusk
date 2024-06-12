@@ -8,7 +8,7 @@ from aiogram.types import contact, document
 import asyncio
 from utils import *
 
-API_TOKEN = '7287215925:AAFUI8JK7cPgi4QZQh_i6FxUhehK8Qb_pac'
+API_TOKEN = "7456586593:AAEMBbkc-_fO71WxbSzBbli4uP0kC30eGXM"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-paychecks = load_json('paychecks.json')
-
+paychecks = load_json("paychecks.json")
+payments = load_json("payments.json")
 
 # Define states
 class Form(StatesGroup):
@@ -68,7 +68,7 @@ async def payment_method_handler(callback_query: types.CallbackQuery, state: FSM
     if callback_query.data == "pay_prodamus":
         await state.set_state(Form.prodamus)
         await callback_query.message.answer("https://enalika.proeducation.kz/")
-        await callback_query.message.answer("Prodamus payment is not yet implemented.")
+        await callback_query.message.answer("Send a message after a payment")
     elif callback_query.data == "pay_kaspi":
         # Prompt for PDF receipt instead of opening the URL directly
         await state.set_state(Form.kaspi)
@@ -114,6 +114,16 @@ async def process_paycheck(message, paycheck_data, state):
     await message.reply("Чек валидирован")
     await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
 
+    await state.clear()
+
+
+@dp.message(Form.prodamus)
+async def proccess_prodamus(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    if not data["phone"] in payments:
+        await message.reply("Proccess the payment")
+
+    await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
     await state.clear()
 
 
