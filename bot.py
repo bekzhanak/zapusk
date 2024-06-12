@@ -135,13 +135,18 @@ async def payment_method_handler(callback_query: types.CallbackQuery, state: FSM
     await callback_query.answer()  # Acknowledge the callback
 
     if callback_query.data == "pay_prodamus":
+        kb = [
+            [types.InlineKeyboardButton(text="Перейти на продамус", url="https://enalika.proeducation.kz/")]
+        ]
+        await callback_query.message.reply("Click", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
         await state.set_state(Form.prodamus)
-        await callback_query.message.answer("https://enalika.proeducation.kz/")
-        await callback_query.message.answer("Send a message after a payment")
     elif callback_query.data == "pay_kaspi":
         # Prompt for PDF receipt instead of opening the URL directly
         await state.set_state(Form.kaspi)
-        await callback_query.message.answer("https://pay.kaspi.kz/pay/5t1euuhq")
+        kb = [
+            [types.InlineKeyboardButton(text="Перейти на Каспи", url="https://pay.kaspi.kz/pay/5t1euuhq")]
+        ]
+        await callback_query.message.reply("Click", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
         await callback_query.message.answer("Please upload your PDF receipt for Kaspi payment.")
 
 
