@@ -3,12 +3,13 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-from aiogram.filters import CommandStart
-from aiogram.types import contact, document
+from aiogram.filters import CommandStart, Command
 import asyncio
 from utils import *
+from wheel import *
+import csv
 
-API_TOKEN = "7456586593:AAEMBbkc-_fO71WxbSzBbli4uP0kC30eGXM"
+API_TOKEN = "6955797688:AAEL6QuK_E_M4n-sfxbgokzWr5JhlXZjIgI"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,17 +20,44 @@ dp = Dispatcher()
 paychecks = load_json("paychecks.json")
 payments = load_json("payments.json")
 
+
 # Define states
 class Form(StatesGroup):
     name = State()
     phone = State()
     kaspi = State()
     prodamus = State()
+    wheel_available = State()
 
 
 # Start command handler
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
+    current_time = int(time.time())
+
+    telegram_id = message.from_user.id
+    user_data = {
+        "start_time": current_time,
+        "telegram_id": str(telegram_id),
+        "name": "",
+        "phone": "",
+        "crm_id": ""  # Initialize crm_id with a default value
+    }
+
+    # Load existing users
+    existing_users = {}
+    try:
+        with open('user_data.csv', 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                existing_users[row['telegram_id']] = row
+    except FileNotFoundError:
+        pass
+
+    if str(telegram_id) in existing_users:
+        user_data = existing_users[str(telegram_id)]
+
+    await state.update_data(**user_data)
     await state.set_state(Form.name)
     await message.reply("Please enter your name and surname:")
 
@@ -48,11 +76,49 @@ async def process_name(message: types.Message, state: FSMContext):
 # Phone number handler
 @dp.message(Form.phone)
 async def process_phone(message: types.Message, state: FSMContext):
-    await state.update_data(phone=message.contact.phone_number)
-
+    if message.contact:
+        await state.update_data(phone=message.contact.phone_number)
     data = await state.get_data()
-    with open('user_data.json', 'w') as f:
-        json.dump(data, f)
+    current_state = await state.get_state()
+
+    telegram_id = data['telegram_id']
+
+    # Load existing users
+    existing_users = {}
+    try:
+        with open('user_data.csv', 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                existing_users[row['telegram_id']] = row
+    except FileNotFoundError:
+        pass
+
+    # Check if the user already exists
+    if telegram_id in existing_users:
+        crm_id = existing_users[telegram_id]["crm_id"]
+    else:
+        info = [data["name"], "+" + data["phone"], data["start_time"]]
+        crm_id = add_crm(info[0], info[1], info[2])
+        await state.update_data(crm_id=crm_id)
+
+    # Update user data
+    existing_users[telegram_id] = {
+        "start_time": data["start_time"],
+        "telegram_id": data["telegram_id"],
+        "name": data["name"],
+        "phone": data["phone"],
+        "state": str(current_state),
+        "crm_id": crm_id
+    }
+
+    # Write updated data back to CSV
+    with open('user_data.csv', 'w', newline='') as csvfile:
+        fieldnames = ["start_time", "telegram_id", "name", "phone", "state", "crm_id"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for user in existing_users.values():
+            writer.writerow(user)
+
     kb = [
         [types.InlineKeyboardButton(text="Kaspi", callback_data="pay_kaspi")],
         [types.InlineKeyboardButton(text="Prodamus", callback_data="pay_prodamus")]
@@ -111,10 +177,17 @@ async def process_paycheck(message, paycheck_data, state):
     paycheck_data["user_id"] = message.from_user.id
     paychecks[paycheck_id] = paycheck_data
     save_json('paychecks.json', paychecks)
-    await message.reply("Чек валидирован")
-    await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
 
-    await state.clear()
+    data = await state.get_data()
+    crm_id = data.get("crm_id")
+    if crm_id:
+        edit_crm(crm_id)
+        await message.reply("Чек валидирован")
+        await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
+        await message.reply("колесо фортуны /wheel")
+        await state.set_state(Form.wheel_available)
+    else:
+        await message.reply("CRM ID not found, cannot validate receipt.")
 
 
 @dp.message(Form.prodamus)
@@ -122,8 +195,33 @@ async def proccess_prodamus(message: types.Message, state: FSMContext):
     data = await state.get_data()
     if not data["phone"] in payments:
         await message.reply("Proccess the payment")
+        return
 
     await message.reply("https://t.me/+E6WNLXGZH8E3ZTli")
+    await state.clear()
+
+
+@dp.message(Command(commands=["wheel"]))
+async def play_wheel_game(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state != "wheel_available":
+        await message.reply("Please validate your receipt first.")
+        return
+
+    user_data = await state.get_data()
+    name = user_data.get("name", None)
+    if not name:
+        await message.reply("Please enter your name first. Use /start command.")
+        return
+
+    try:
+        winning_item = str(play_game())
+        await message.reply_photo(photo="https://pbs.twimg.com/profile_images/1676625773611081728/k05BA1j1_400x400.jpg")
+        await message.reply(f"Поздравляем, {name}! Вы выиграли {winning_item}")
+    except Exception as e:
+        await message.reply("Произошла ошибка. Пожалуйста, попробуйте позже.")
+        print(f"Error during game: {e}")
+
     await state.clear()
 
 

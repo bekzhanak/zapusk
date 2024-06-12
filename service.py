@@ -27,7 +27,6 @@ async def receive_data(request: Request):
         elif data[0] == "payment_status":
             status = data[1]
 
-    print(type(body_dict))
     print(body_dict)
 
     if not status == "success":
